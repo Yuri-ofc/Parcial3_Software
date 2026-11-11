@@ -1,0 +1,6 @@
+# Archivos compilados de Java
+*.class
+
+# Documentos de trabajo (no se suben al repositorio)
+informacion.txt
+Parte_*.md
