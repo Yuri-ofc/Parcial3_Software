@@ -13,25 +13,34 @@ import java.util.Map;
 public class main {
 
     /**
+     * Parametros del codigo estudiantil 0182310049 (A=3 B=1 C=0 D=0 E=4 F=9):
+     *   PMAX = 45 kg   L1 = 3 kg   L2 = 10 kg
+     *   RR = 10 %      RN = 40 %   V = 10 %    S = $2.000
+     *
      * CONFIG = {
-     *   "L1": None,            # <- pon tus valores
-     *   "L2": None,
-     *   "RECARGO_RURAL": None, # como fraccion, ej. 0.15
-     *   "RECARGO_NACIONAL": None,
-     *   "DESC_VIP": None,
-     *   "RECARGO_FINDE": None, # en pesos
+     *   "L1": 3,
+     *   "L2": 10,
+     *   "RECARGO_RURAL": 0.10,
+     *   "RECARGO_NACIONAL": 0.40,
+     *   "DESC_VIP": 0.10,
+     *   "RECARGO_FINDE": 2000,
      * }
      */
     static final Map<String, Double> CONFIG = new HashMap<>();
 
     static {
-        CONFIG.put("L1", null);              // <- pon tus valores
-        CONFIG.put("L2", null);
-        CONFIG.put("RECARGO_RURAL", null);   // como fraccion, ej. 0.15
-        CONFIG.put("RECARGO_NACIONAL", null);
-        CONFIG.put("DESC_VIP", null);
-        CONFIG.put("RECARGO_FINDE", null);   // en pesos
+        CONFIG.put("L1", 3.0);               // 2 + (B mod 3)         = 2 + 1 = 3
+        CONFIG.put("L2", 10.0);              // 10 + C                = 10 + 0 = 10
+        CONFIG.put("RECARGO_RURAL", 0.10);   // 10 + 5*(E mod 4)      = 10 + 0 = 10 %
+        CONFIG.put("RECARGO_NACIONAL", 0.40); // 40 + 5*(F mod 3)     = 40 + 0 = 40 %
+        CONFIG.put("DESC_VIP", 0.10);        // 10 + 5*(A mod 3)      = 10 + 0 = 10 %
+        CONFIG.put("RECARGO_FINDE", 2000.0); // 2000 + 500*(C mod 4)  = 2000 + 0 = $2.000
     }
+
+    // Nota: PMAX no existe en CONFIG; el codigo heredado compara contra 50 en duro.
+    // Con el codigo estudiantil, PMAX = 30 + 5*A = 45, por lo que el 50 es un
+    // defecto del codigo heredado que se reporta en la Parte 5 y se corrige en la Parte 6.
+
 
     /**
      * def calc(p, z, c, d, cup=None, flag=False):
@@ -98,19 +107,16 @@ public class main {
     }
 
     /**
-     * Ejemplo del enunciado (codigo estudiantil 2023184706), solo para verificar
-     * que la traduccion se comporta igual que el Python original.
-     * Reemplaza estos valores por los de TU codigo.
+     * Ejemplo del enunciado con los parametros del codigo estudiantil 0182310049:
+     * peso = 4 kg, zona = rural, cliente = vip, dia = 6 (sabado), cupon = ENVIO10.
+     *
+     * Resultado esperado segun la especificacion (Parte 1): $9.600.
+     * El codigo heredado devuelve otro valor; esa diferencia es el defecto que se
+     * documenta en la Parte 5 y se corrige en la Parte 6.
      */
     public static void main(String[] args) {
-        CONFIG.put("L1", 4.0);              // 2 + (B mod 3), B = 8
-        CONFIG.put("L2", 14.0);             // 10 + C, C = 4
-        CONFIG.put("RECARGO_RURAL", 0.10);  // 10 + 5*(E mod 4), E = 0
-        CONFIG.put("RECARGO_NACIONAL", 0.40); // 40 + 5*(F mod 3), F = 6
-        CONFIG.put("DESC_VIP", 0.15);       // 10 + 5*(A mod 3), A = 1
-        CONFIG.put("RECARGO_FINDE", 2000.0); // 2000 + 500*(C mod 4), C = 4
-
         int resultado = calc(4, "rural", "vip", 6, "ENVIO10");
-        System.out.println("resultado: " + resultado);
+        System.out.println("resultado heredado: " + resultado);
+        System.out.println("esperado por especificacion: 9600");
     }
 }
