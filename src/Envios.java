@@ -24,13 +24,17 @@ public final class Envios {
     private static final Map<String, BigDecimal> FACTORES_CLIENTE = Map.of(
         "normal", BigDecimal.ONE, "frecuente", FACTOR_FRECUENTE, "vip", FACTOR_VIP);
     private static final Map<String, EstrategiaZona> ZONAS = Map.of(
-        "urbana", new ZonaUrbana(), "rural", new ZonaRural(), "nacional", new ZonaNacional());
+        "urbana", new ZonaUrbana(), "rural", new ZonaRural(), "nacional", new ZonaNacional(),
+        "insular", new ZonaInsular());
 
     private Envios() { }
 
     public static int calcularCosto(double peso, String zona, String cliente, int dia, String cupon) {
         validarPesoYDia(peso, dia);
         EstrategiaZona estrategia = seleccionarZona(zona);
+        if (cupon != null && !estrategia.aceptaCupon()) {
+            throw new IllegalArgumentException("cupon no permitido en zona insular");
+        }
         BigDecimal factorCupon = factorCupon(cupon);
         BigDecimal costo = estrategia.aplicarRecargo(tarifaBase(BigDecimal.valueOf(peso)));
         costo = aplicarFinDeSemana(costo, dia);

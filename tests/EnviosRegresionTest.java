@@ -20,7 +20,10 @@ public class EnviosRegresionTest {
             Arguments.of("EX-07", 10.06125, "urbana", "normal", 2, null, 9000),
             Arguments.of("EX-08", 10.06375, "urbana", "normal", 2, null, 9100),
             Arguments.of("EX-15", Double.MIN_VALUE, "urbana", "normal", 2, null, 6000),
-            Arguments.of("EX-16", 45.0, "nacional", "normal", 2, null, 51800)
+            Arguments.of("EX-16", 45.0, "nacional", "normal", 2, null, 51800),
+            Arguments.of("EX-17", 5.0, "insular", "normal", 2, null, 15300),
+            Arguments.of("EX-18", 5.0, "insular", "vip", 2, null, 13800),
+            Arguments.of("EX-19", 5.0, "insular", "normal", 6, null, 17300)
         );
     }
     @ParameterizedTest(name = "{0}")
@@ -51,6 +54,18 @@ public class EnviosRegresionTest {
     void cuponOpcional() {
         assertEquals(9000, main.calc(5, "urbana", "normal", 2));
     }
+    static Stream<Arguments> cuponesInsulares() {
+        return Stream.of(Arguments.of("EX-20", "ENVIO10"), Arguments.of("EX-21", "ENVIO20"));
+    }
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("cuponesInsulares")
+    void rechazaCualquierCuponEnZonaInsular(String id, String cupon) {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+            () -> main.calc(5, "insular", "normal", 2, cupon), id);
+        assertTrue(error.getMessage().toLowerCase().contains("cupon"),
+            id + ": el motivo debe ser la política de cupones insulares");
+    }
+
     @Test
     @DisplayName("EX-14")
     void apiSinFlag() {

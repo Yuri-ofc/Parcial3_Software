@@ -2,7 +2,19 @@
 
 Los cambios importantes de este proyecto se documentan aquí. El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el versionado [Semantic Versioning](https://semver.org/lang/es/).
 
-## [2.0.0] - 2026-11-12
+
+## [2.1.0] - 2026-11-11
+
+### Added
+- Zona insular de San Andrés con recargo del 70 %, mediante una estrategia dedicada.
+- Política de aceptación de cupones por estrategia; la zona insular rechaza todo cupón.
+- Cinco casos de regresión de Parte 8 para recargo, fin de semana, descuento y rechazo de cupón.
+
+### Changed
+- CP-14 y CB-08 ahora esperan el costo válido de la zona insular ($15.300); se conserva el rechazo para zonas desconocidas.
+- Cobertura de ramas productivas de regresión: 26/26.
+
+## [2.0.0] - 2026-11-11
 
 ### Added
 - Estrategias de zona urbana, rural y nacional.
