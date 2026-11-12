@@ -4,3 +4,10 @@
 # Documentos de trabajo (no se suben al repositorio)
 informacion.txt
 Parte_*.md
+
+# Dependencias y evidencias generadas localmente
+.tools/
+build/
+Parte5_Resultados/
+Integracion_Parte4/
+Integracion_Parte4_Final/

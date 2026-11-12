@@ -1,0 +1,14 @@
+{
+  "junit-platform-console-standalone-1.11.4.jar": {
+    "url": "https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-console-standalone/1.11.4/junit-platform-console-standalone-1.11.4.jar",
+    "sha256": "b016ef6b1c3454d6d7c2c88ce081dabf289699686af6622d6e4e2e1b54b4a2fc"
+  },
+  "jacocoagent-0.8.13.jar": {
+    "url": "https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.agent/0.8.13/org.jacoco.agent-0.8.13-runtime.jar",
+    "sha256": "47e700ccb0fdb9e27c5241353f8161938f4e53c3561dd35e063c5fe88dc3349b"
+  },
+  "jacococli-0.8.13.jar": {
+    "url": "https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.cli/0.8.13/org.jacoco.cli-0.8.13-nodeps.jar",
+    "sha256": "8f748683833d4dc4d72cea5d6b43f49344687b831e0582c97bcb9b984e3de0a3"
+  }
+}
