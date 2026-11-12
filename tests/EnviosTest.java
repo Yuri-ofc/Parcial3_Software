@@ -84,7 +84,7 @@ public class EnviosTest {
                            String cup, boolean flag, Integer esperado, String error) {
         if (error != null) {
             IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> main.calc(p, z, c, d, cup, flag), id + ": debe rechazar los datos");
+                () -> main.calc(p, z, c, d, cup), id + ": debe rechazar los datos");
             // R2 y R7 no fijan mensaje; R1 se compara ignorando solo tildes.
             if (!error.equals("error")) {
                 String mensaje = Normalizer.normalize(ex.getMessage(), Normalizer.Form.NFD)
@@ -97,15 +97,15 @@ public class EnviosTest {
             int obtenido;
             try (PrintStream capturada = new PrintStream(salida, true, StandardCharsets.UTF_8)) {
                 System.setOut(capturada);
-                obtenido = main.calc(p, z, c, d, cup, true);
+                obtenido = main.calc(p, z, c, d, cup);
             } finally {
                 System.setOut(anterior);
             }
             assertEquals(esperado.intValue(), obtenido, id);
-            assertEquals("costo: 9000.0" + System.lineSeparator(),
-                salida.toString(StandardCharsets.UTF_8), id + ": salida estandar");
+            assertEquals("",
+                salida.toString(StandardCharsets.UTF_8), id + ": el calculo no imprime");
         } else {
-            assertEquals(esperado.intValue(), main.calc(p, z, c, d, cup, false), id);
+            assertEquals(esperado.intValue(), main.calc(p, z, c, d, cup), id);
         }
     }
 }

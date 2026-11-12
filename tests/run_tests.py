@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Ejecuta JUnit y genera cobertura incluso si hay aserciones fallidas.
-Uso: python3 tests/run_tests.py [--case CP-10] [--tag caja-negra|caja-blanca]
+Uso: python3 tests/run_tests.py [--case CP-10] [--tag caja-negra|caja-blanca|regresion-extra]
 El estado de salida conserva el de JUnit: 1 indica pruebas fallidas.
 """
 import argparse, hashlib, json, re, subprocess, sys, urllib.request
@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--case', type=str.upper)
-    ap.add_argument('--tag', choices=['caja-negra', 'caja-blanca'])
+    ap.add_argument('--tag', choices=['caja-negra', 'caja-blanca', 'regresion-extra'])
     args = ap.parse_args()
     if args.case and not re.fullmatch(r'(CP|CB)-\d{2}', args.case):
         ap.error('ID esperado: CP-01 o CB-01')
@@ -39,12 +39,12 @@ def main():
     prod = out/'classes'; prod.mkdir(parents=True)
     test = out/'test-classes'; test.mkdir()
     junit = cache/'junit-platform-console-standalone-1.11.4.jar'
-    subprocess.run(['javac','-g','-encoding','UTF-8','-d',str(prod),str(ROOT/'main.java')],check=True)
+    subprocess.run(['javac','-g','-encoding','UTF-8','-d',str(prod),str(ROOT/'main.java')]+[str(p) for p in sorted((ROOT/'src').glob('*.java'))],check=True)
     subprocess.run(['javac','-g','-encoding','UTF-8','-cp',str(junit)+':'+str(prod),
-        '-d',str(test),str(ROOT/'tests/EnviosTest.java')],check=True)
-    cmd = ['java','-javaagent:'+str(cache/'jacocoagent-0.8.13.jar')+'=destfile='+str(out/'jacoco.exec')+',includes=main',
+        '-d',str(test),*[str(p) for p in sorted((ROOT/'tests').glob('*Test.java'))]],check=True)
+    cmd = ['java','-javaagent:'+str(cache/'jacocoagent-0.8.13.jar')+'=destfile='+str(out/'jacoco.exec')+',includes=main:Envios:Zona*',
         '-jar',str(junit),'execute','--class-path',str(prod)+':'+str(test),
-        '--select-class','EnviosTest','--details','tree','--disable-ansi-colors',
+        '--scan-class-path','--details','tree','--disable-ansi-colors',
         '--reports-dir',str(out/'junit-xml')]
     if args.tag: cmd += ['--include-tag',args.tag]
     if args.case:
@@ -55,19 +55,20 @@ def main():
     if result.returncode not in (0,1):
         raise RuntimeError('JUnit no completó la ejecución: '+str(result.returncode))
     subprocess.run(['java','-jar',str(cache/'jacococli-0.8.13.jar'),'report',str(out/'jacoco.exec'),
-        '--classfiles',str(prod),'--sourcefiles',str(ROOT),'--html',str(out/'coverage'),
+        '--classfiles',str(prod),'--sourcefiles',str(ROOT),'--sourcefiles',str(ROOT/'src'),'--html',str(out/'coverage'),
         '--xml',str(out/'jacoco.xml'),'--csv',str(out/'jacoco.csv'),
-        '--name','EnvíaYa · código heredado · '+label],check=True)
+        '--name','EnvíaYa · refactorizado · '+label],check=True)
     root = ET.parse(out/'jacoco.xml').getroot()
     cl = root.find('./package/class[@name="main"]')
-    method = cl.find('./method[@name="calc"][@desc="(DLjava/lang/String;Ljava/lang/String;ILjava/lang/String;Z)I"]')
+    service = root.find('./package/class[@name="Envios"]')
+    method = service.find('./method[@name="calcularCosto"]')
     counters = {el.attrib['type']:{'missed':int(el.attrib['missed']),'covered':int(el.attrib['covered'])} for el in method.findall('counter')}
     results=[]
     for xml in sorted((out/'junit-xml').glob('TEST-*.xml')):
         for el in ET.parse(xml).getroot().iter('testcase'):
             # En el XML legacy, el ID se encuentra en system-out (display-name).
             text = ' '.join([el.attrib.get('name','')] + [x.text or '' for x in el.findall('system-out')])
-            match = re.search(r'\b(?:CP|CB)-\d{2}\b',text)
+            match = re.search(r'\b(?:CP|CB|EX)-\d{2}\b',text)
             if not match: continue
             failure = el.find('failure')
             error = el.find('error')
@@ -76,7 +77,16 @@ def main():
     results.sort(key=lambda c:c['id'])
     if not results: raise RuntimeError('No se identificaron casos ejecutados en JUnit XML')
     source = (ROOT/'main.java').read_bytes()
-    summary = {'output':str(out.relative_to(ROOT)),'junit_exit':result.returncode,
+    methods = []
+    for cls in root.findall('./package/class'):
+        for m in cls.findall('method'):
+            methods.append({'class':cls.attrib['name'],'name':m.attrib['name'],
+                'desc':m.attrib['desc'],'line':m.attrib.get('line'),
+                'counters':{x.attrib['type']:{'missed':int(x.attrib['missed']),'covered':int(x.attrib['covered'])} for x in m.findall('counter')}})
+    production = [ROOT/'main.java'] + sorted((ROOT/'src').glob('*.java'))
+    hashes = {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in production}
+    summary = {'methods':methods,'source_hashes':hashes,
+        'production_counters':{x.attrib['type']:{'missed':int(x.attrib['missed']),'covered':int(x.attrib['covered'])} for x in root.findall('counter')},'output':str(out.relative_to(ROOT)),'junit_exit':result.returncode,
         'source_sha256':hashlib.sha256(source).hexdigest(),'tests':results,'method_counters':counters,
         'class_counters':{x.attrib['type']:{'missed':int(x.attrib['missed']),'covered':int(x.attrib['covered'])} for x in cl.findall('counter')}}
     (out/'summary.json').write_text(json.dumps(summary,indent=2,ensure_ascii=False))
